@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wen.oawxapi.mapper.TbUserMapper">
+    <select id="getUserInfo" resultType="java.util.Map">
+        SELECT
+        u.nickname as name,
+        d.dept_name
+        FROM tb_user u,tb_dept d
+        <where>
+            u.dept_id = d.id
+        </where>
+    </select>
+</mapper>
