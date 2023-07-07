@@ -11,4 +11,5 @@ import lombok.Data;
 public class EmailSonOfOaConfig {
     private String system;
     private String hr;
+    private String boss;
 }

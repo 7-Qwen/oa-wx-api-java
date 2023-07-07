@@ -235,7 +235,9 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
         String name = StrUtil.isBlank(userInfo.get("name")) ? "未知姓名" : userInfo.get("name");
         String deptName = StrUtil.isBlank(userInfo.get("deptName")) ? "暂无部门" : userInfo.get("deptName");
         SimpleMailMessage mail = new SimpleMailMessage();
-        mail.setTo(oaConfig.getEmail().getHr());
+        mail.setTo(
+                oaConfig.getEmail().getHr(),
+                oaConfig.getEmail().getBoss());
         mail.setSubject("员工:" + name + "进行了签到");
         mail.setText(
                 deptName + " 的员工 " + name + ",在"
