@@ -241,7 +241,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
         mail.setSubject("员工:" + name + "进行了签到");
         mail.setText(
                 deptName + " 的员工 " + name + ",在"
-                        + DateUtil.format(new Date(), "yyyy年MM月dd日")
+                        + DateUtil.format(new Date(), "yyyy年MM月dd日 HH:mm:ss")
                         + checkinForm.getAddress() + "进行了签到,请检查。"
         );
         emailTask.sendAsync(mail);
