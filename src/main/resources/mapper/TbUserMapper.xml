@@ -6,7 +6,7 @@
     <select id="getUserInfo" resultType="java.util.Map">
         SELECT
         u.nickname as name,
-        d.dept_name
+        d.dept_name as deptName
         FROM tb_user u,tb_dept d
         <where>
             u.dept_id = d.id

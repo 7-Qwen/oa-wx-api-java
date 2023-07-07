@@ -3,6 +3,8 @@ package com.wen.oawxapi.common.config;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
+import com.wen.oawxapi.common.exception.CustomException;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -19,7 +21,7 @@ import java.util.Map;
  * @Date: 2023-05-19 14:38
  * @description: 处理xss脚本攻击对请求参数进行转义处理
  */
-
+@Slf4j
 public class XssRequestHandler extends HttpServletRequestWrapper {
 
     public XssRequestHandler(HttpServletRequest request) {
@@ -51,6 +53,10 @@ public class XssRequestHandler extends HttpServletRequestWrapper {
         //声明字符拼接
         StringBuffer sb = new StringBuffer();
         String readLine = br.readLine();
+        if (StrUtil.isEmpty(readLine)) {
+            log.error("请求的json为空");
+            throw new CustomException("服务器出现异常");
+        }
         while (StrUtil.isNotEmpty(readLine)) {
             //转义
             HtmlUtil.filter(readLine);

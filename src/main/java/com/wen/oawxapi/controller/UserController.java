@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class UserController {
         }
         Long userId = jwtUtils.getUserId(token);
         String path = oaConfig.getImageFolder() + "/" + file.getOriginalFilename().toLowerCase();
-        if (!path.endsWith(".jpg") || !path.endsWith(".jpeg")) {
+        if (!path.endsWith("jpg") && !path.endsWith("jpeg")) {
             throw new CustomException("文件只支持上传jpg或者jpeg图片");
         } else {
             try {
@@ -135,7 +136,7 @@ public class UserController {
         Long userId = jwtUtils.getUserId(token);
         String filename = file.getOriginalFilename().toLowerCase();
         String path = oaConfig.getImageFolder() + "/" + filename;
-        if (!filename.endsWith(".jpg") || !filename.endsWith(".jpeg")) {
+        if (!filename.endsWith(".jpg") && !filename.endsWith(".jpeg")) {
             throw new CustomException("文件只支持上传jpg或者jpeg图片");
         }
         //完成文件本地化

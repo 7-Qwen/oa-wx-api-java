@@ -25,9 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -82,7 +82,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
     public Boolean searchUserIsCheckin(Long userId) {
         return baseTbCheckinService.lambdaQuery()
                 .eq(TbCheckin::getUserId, userId)
-                .eq(TbCheckin::getDate, DateUtil.date())
+                .eq(TbCheckin::getDate, DateUtil.format(DateUtil.date(),"yyyy-MM-dd"))
                 .count() > 0;
     }
 
@@ -167,7 +167,12 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
      * path 上传文件地址
      */
     @Override
+    @Transactional(rollbackFor = RuntimeException.class)
     public void checkin(CheckinForm checkinForm, Long userId, String path) {
+        String resCheck = this.checkCheckin(userId);
+        if (!"用户可以进行签到".equals(resCheck)) {
+            throw new CustomException(resCheck);
+        }
         //初始化参数status
         int status = 0;
         //校验时间
@@ -196,6 +201,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
         //人脸校验
         HttpRequest post = HttpUtil.createPost(oaConfig.getFace().getIdentifyUrl());
         HttpResponse httpResponse = post.form("file", FileUtil.file(path), "modelId", tbFaceModel.getFaceModel()).execute();
+        //todo 检验参数500的情况
         //转换json
         JSON response = JSONUtil.parse(httpResponse.body());
         //通过远程调用获取接口返回值
@@ -256,6 +262,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
      * 创建用户人脸模型
      */
     @Override
+    @Transactional(rollbackFor = RuntimeException.class)
     public void createUserModel(Long userId, String path) {
         //创建远程调用
         HttpRequest post = HttpUtil.createPost(oaConfig.getFace().getModelUrl());
@@ -269,7 +276,11 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
             //获取modelId
             Long modelId = faceResponse.getModelId();
             //存储face信息
-            if (new TbFaceModel(null, userId, modelId.toString()).insert()) {
+            TbFaceModel tbFaceModel = new TbFaceModel();
+            System.out.println(userId);
+            tbFaceModel.setUserId(userId);
+            tbFaceModel.setFaceModel(modelId.toString());
+            if (!tbFaceModel.insert()) {
                 throw new CustomException("存储用户模型错误");
             }
         }
