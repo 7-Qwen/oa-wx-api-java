@@ -23,7 +23,9 @@ public class GeneralResponseException {
     @ExceptionHandler(Exception.class)
     public R exceptionHandler(Exception e) {
         //打印异常报告
-        getStackTrace(e);
+        log.error("捕获到异常,错误堆栈信息如下:" + e.toString());
+        //如果需要异常堆栈 解除注释:
+//        getStackTrace(e);
         if (e instanceof MethodArgumentNotValidException) {
             //如果属于参数校验异常
             MethodArgumentNotValidException methodArgumentNotValidException = (MethodArgumentNotValidException) e;

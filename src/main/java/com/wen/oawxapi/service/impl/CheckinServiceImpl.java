@@ -64,7 +64,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
     @Override
     public Boolean searchTodayIsWorkDay() {
         return baseTbWorkdayService.lambdaQuery()
-                .eq(TbWorkday::getDate, DateUtil.date())
+                .eq(TbWorkday::getDate, DateUtil.format(DateUtil.date(),"yyyy-MM-dd"))
                 .count() > 0;
     }
 
@@ -240,8 +240,9 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
                 oaConfig.getEmail().getBoss());
         mail.setSubject("员工:" + name + "进行了签到");
         mail.setText(
-                deptName + " 的员工 " + name + ",在"
+                deptName + "的员工" + name + ",于"
                         + DateUtil.format(new Date(), "yyyy年MM月dd日 HH:mm:ss")
+                        + "在"
                         + checkinForm.getAddress() + "进行了签到,请检查。"
         );
         emailTask.sendAsync(mail);
