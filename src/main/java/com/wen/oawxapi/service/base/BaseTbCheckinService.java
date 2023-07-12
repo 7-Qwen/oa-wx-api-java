@@ -16,4 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(rollbackFor = Exception.class)
 public class BaseTbCheckinService extends BaseService<TbCheckinMapper, TbCheckin>{
 
+    /**
+     * 查询用户总签到数
+     */
+    public Integer searchHowManyUserCheckin(Long userId) {
+        return this.lambdaQuery().eq(TbCheckin::getUserId, userId).count();
+    }
+
+
 }

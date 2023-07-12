@@ -3,4 +3,34 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.wen.oawxapi.mapper.TbCheckinMapper">
+    <select id="searchUserCheckinToday" parameterType="long" resultType="HashMap">
+        SELECT
+        u.nickname AS name,
+        u.photo,
+        d.dept_name AS deptName,
+        ck.address,
+        CASE
+        WHEN ck.`status` = 1 THEN '正常'
+        WHEN ck.`status` = 2 THEN '中风险'
+        WHEN ck.`status` = 3 THEN '高风险'
+        END AS risk,
+        DATE_FORMAT(ck.create_time,'%H:%i') AS checkinTime,
+        ck.date
+        FROM tb_user u
+        LEFT JOIN tb_checkin ck ON u.id = ck.user_id and ck.date = CURRENT_DATE
+        LEFT JOIN tb_dept d ON u.dept_id = d.id
+        <where>
+            u.id = #{userId} and
+            u.status = 1
+        </where>
+    </select>
+    <select id="searchUserCheckinsByTime" parameterType="HashMap" resultType="HashMap">
+        SELECT
+        CAST(date AS CHAR) AS date,
+        IF(status=1,'正常','迟到') AS status
+        FROM tb_checkin
+        <where>
+            user_id = #{userId} AND date BETWEEN #{startDate} AND #{endDate}
+        </where>
+    </select>
 </mapper>

@@ -1,6 +1,8 @@
 package com.wen.oawxapi.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateRange;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -14,6 +16,7 @@ import com.wen.oawxapi.common.config.ymlArgementConfig.oa.OaConfig;
 import com.wen.oawxapi.common.environment.SystemConstant;
 import com.wen.oawxapi.common.exception.CustomException;
 import com.wen.oawxapi.entity.*;
+import com.wen.oawxapi.mapper.TbCheckinMapper;
 import com.wen.oawxapi.mapper.TbUserMapper;
 import com.wen.oawxapi.service.CheckinService;
 import com.wen.oawxapi.service.base.*;
@@ -30,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -59,12 +64,14 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
     private OaConfig oaConfig;
     @Resource
     private EmailTask emailTask;
+    @Resource
+    private TbCheckinMapper tbCheckinMapper;
 
 
     @Override
     public Boolean searchTodayIsWorkDay() {
         return baseTbWorkdayService.lambdaQuery()
-                .eq(TbWorkday::getDate, DateUtil.format(DateUtil.date(),"yyyy-MM-dd"))
+                .eq(TbWorkday::getDate, DateUtil.format(DateUtil.date(), "yyyy-MM-dd"))
                 .count() > 0;
     }
 
@@ -82,7 +89,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
     public Boolean searchUserIsCheckin(Long userId) {
         return baseTbCheckinService.lambdaQuery()
                 .eq(TbCheckin::getUserId, userId)
-                .eq(TbCheckin::getDate, DateUtil.format(DateUtil.date(),"yyyy-MM-dd"))
+                .eq(TbCheckin::getDate, DateUtil.format(DateUtil.date(), "yyyy-MM-dd"))
                 .count() > 0;
     }
 
@@ -287,5 +294,90 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
                 throw new CustomException("存储用户模型错误");
             }
         }
+    }
+
+    /**
+     * 查询用户今日签到情况
+     */
+    @Override
+    public HashMap<String, Object> searchUserCheckinToday(Long userId) {
+        return tbCheckinMapper.searchUserCheckinToday(userId);
+    }
+
+    /**
+     * 查询用户总签到数
+     */
+    @Override
+    public Integer totalUserCheckin(Long userId) {
+        return baseTbCheckinService.searchHowManyUserCheckin(userId);
+    }
+
+    /**
+     * 查询用户一周的签到情况
+     */
+    @Override
+    public ArrayList<HashMap<String, Object>> searchWeekCheckin(HashMap<String, Object> param) {
+        //根据时间参数查询用户在时间段内签到情况
+        ArrayList<HashMap<String, String>> checkinsList = tbCheckinMapper.searchUserCheckinsByTime(param);
+        //获取时间段内的假期日期
+        ArrayList<String> holidaysDate = baseTbHolidaysService.searchHolidaysDate(param);
+        //获取时间段内的工作日期
+        ArrayList<String> workDaysByTime = baseTbWorkdayService.searchWorkDaysByTime(param);
+        DateTime startTime = DateUtil.parse((String) param.get("startTime"));
+        DateTime endTime = DateUtil.parse((String) param.get("endTime"));
+        //获取从开始时间到结束时间的所有日期范围
+        DateRange range = DateUtil.range(startTime, endTime, DateField.DAY_OF_MONTH);
+        //声明容器
+        ArrayList<HashMap<String, Object>> list = new ArrayList();
+        range.forEach(rangeDate -> {
+            //获取日期
+            String date = rangeDate.toString("yyyy-MM-dd");
+            //校验当前日期的工作类型:是否为工作日,如果不在特殊的休息日和工作日的话就是正常的工作日
+            String type = "工作日";
+            if (holidaysDate.contains(date)) {
+                type = "节假日";
+            } else if (workDaysByTime.contains(date)) {
+                type = "工作日";
+            }
+            //校验签到状态
+            String status = "";
+            //如果工作类型为工作日且日期在今天或今天之前
+            if ("工作日".equals(type) && rangeDate.isBeforeOrEquals(DateUtil.date())) {
+                //当前日期用户是否签到标记
+                boolean flag = false;
+                for (HashMap<String, String> userCheckDate : checkinsList) {
+                    //如果用户在当前日期签到了直接返回其签到状态
+                    if (userCheckDate.containsValue(date)) {
+                        status = userCheckDate.get("status");
+                        flag = true;
+                        break;
+                    }
+                    //定义签到结束时间
+                    DateTime attendEndTime = DateUtil.parse(DateUtil.date() + systemConstant.attendanceEndTime);
+                    //如果用户没有在今天有签到记录,则检验是否为签到结束时间前还未签到的情况
+                    if (date.equals(DateUtil.today()) && DateUtil.date().isBefore(attendEndTime) && !flag) {
+                        status = "";
+                    }
+                }
+            }
+            //如果类型为假期则无需用户签到情况
+            HashMap<String, Object> hashMap = new HashMap();
+            hashMap.put("date", date);
+            hashMap.put("status", status);
+            hashMap.put("type", type);
+            hashMap.put("day", rangeDate.dayOfWeekEnum().toChinese("周"));
+            //完成当前rangeDate的状态
+            list.add(hashMap);
+        });
+        return list;
+    }
+
+
+    /**
+     * 查询用户一月的签到情况
+     */
+    @Override
+    public ArrayList<HashMap<String, Object>> searchMonthCheckin(HashMap<String, Object> param) {
+        return this.searchWeekCheckin(param);
     }
 }
