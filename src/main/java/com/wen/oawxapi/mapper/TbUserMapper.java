@@ -3,6 +3,7 @@ package com.wen.oawxapi.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.wen.oawxapi.entity.TbUser;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import java.util.Map;
 public interface TbUserMapper extends BaseMapper<TbUser> {
 
     /**
-     * 获取用户信息
+     * 获取用户信息 不要MapKey应用场景
      */
-    Map<String, String> getUserInfo(Long userId);
+    Map<String, String> getUserInfo(@Param("userId") Long userId);
 }

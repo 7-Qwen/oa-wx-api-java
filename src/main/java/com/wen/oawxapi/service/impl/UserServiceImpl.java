@@ -8,6 +8,7 @@ import cn.hutool.json.JSONUtil;
 import com.wen.oawxapi.common.environment.CommonConstantPaper;
 import com.wen.oawxapi.common.exception.CustomException;
 import com.wen.oawxapi.entity.TbUser;
+import com.wen.oawxapi.mapper.TbUserMapper;
 import com.wen.oawxapi.service.base.BaseTbPermissionService;
 import com.wen.oawxapi.service.base.BaseTbRoleService;
 import com.wen.oawxapi.service.base.BaseTbUserService;
@@ -43,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private BaseTbRoleService baseTbRoleService;
     @Resource
     private BaseTbPermissionService baseTbPermissionService;
+    @Resource
+    private TbUserMapper tbUserMapper;
 
 
     /**
@@ -112,6 +115,15 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("用户不存在");
         }
         return baseTbPermissionService.getPermissionsByUserId(user.getId());
+    }
+
+
+    /**
+     * 获取用户信息
+     */
+    @Override
+    public Map<String, String> getUserInfo(Long userId) {
+        return tbUserMapper.getUserInfo(userId);
     }
 
     /**

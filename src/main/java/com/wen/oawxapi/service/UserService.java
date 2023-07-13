@@ -31,15 +31,19 @@ public interface UserService {
     TbUser login(String jsCode);
 
 
-
     /**
      * 根据用户id获取用户权限
      *
      * @param userId 用户id
      * @return 用户权限去重集合
-     *
      * @author 7wen
      * @date 2023-06-07 11:51
      */
     Set<String> getUserPermission(Long userId);
+
+
+    /**
+     * 获取用户信息
+     */
+    Map<String, String> getUserInfo(Long userId);
 }

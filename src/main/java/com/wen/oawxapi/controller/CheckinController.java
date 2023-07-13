@@ -2,21 +2,28 @@ package com.wen.oawxapi.controller;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.unit.DataUnit;
+import cn.hutool.core.io.FileUtil;
+import com.wen.oawxapi.common.config.ymlArgementConfig.oa.OaConfig;
 import com.wen.oawxapi.common.environment.SystemConstant;
 import com.wen.oawxapi.common.exception.CustomException;
 import com.wen.oawxapi.common.utils.JwtUtils;
 import com.wen.oawxapi.common.utils.R;
+import com.wen.oawxapi.vo.form.CheckinForm;
 import com.wen.oawxapi.vo.form.MonthCheckinForm;
 import com.wen.oawxapi.entity.TbUser;
 import com.wen.oawxapi.service.CheckinService;
 import com.wen.oawxapi.service.base.BaseTbUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.shiro.authz.annotation.Logical;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +46,68 @@ public class CheckinController {
     private CheckinService checkinService;
     @Resource
     private SystemConstant systemConstant;
+    @Resource
+    private OaConfig oaConfig;
+
+    @ApiOperation(value = "查询用户是否可以签到")
+    @GetMapping("/checkCheckin")
+    @RequiresPermissions(value = {"ROOT", "USER:READ"}, logical = Logical.OR)
+    public R checkCheckin(@RequestHeader(value = "token") String token) {
+        Long userId = jwtUtils.getUserId(token);
+        return R.ok(checkinService.checkCheckin(userId));
+    }
+
+    @ApiOperation(value = "用户签到")
+    @PostMapping("/check")
+    public R check(@Valid CheckinForm checkinForm, @RequestParam("photo") MultipartFile file, @RequestHeader("token") String token) {
+        if (file == null) {
+            return R.error("没有上传文件");
+        }
+        Long userId = jwtUtils.getUserId(token);
+        String path = oaConfig.getImageFolder() + "/" + file.getOriginalFilename().toLowerCase();
+        if (!path.endsWith("jpg") && !path.endsWith("jpeg")) {
+            throw new CustomException("文件只支持上传jpg或者jpeg图片");
+        } else {
+            try {
+                //将内存中的file文件持久化
+                file.transferTo(Paths.get(path));
+                checkinService.checkin(checkinForm, userId, path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                FileUtil.del(path);
+            }
+        }
+        return R.ok("签到成功");
+    }
+
+
+    @ApiOperation(value = "用户创建模型")
+    @PostMapping("/check/createModel")
+    public R createModel(@RequestParam("photo") MultipartFile file, @RequestHeader("token") String token) {
+        //校验文件
+        if (file == null) {
+            return R.error("文件为空");
+        }
+        Long userId = jwtUtils.getUserId(token);
+        String filename = file.getOriginalFilename().toLowerCase();
+        String path = oaConfig.getImageFolder() + "/" + filename;
+        if (!filename.endsWith(".jpg") && !filename.endsWith(".jpeg")) {
+            throw new CustomException("文件只支持上传jpg或者jpeg图片");
+        }
+        //完成文件本地化
+        try {
+            file.transferTo(Paths.get(path));
+            checkinService.createUserModel(userId, path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CustomException("文件保存出错了喔");
+        } finally {
+            FileUtil.del(path);
+        }
+        return R.ok("创建模型成功");
+    }
+
 
     @ApiOperation("获取用户周签到数据")
     @GetMapping("/searchThisWeekUserCheckin")
@@ -108,8 +177,8 @@ public class CheckinController {
         DateTime endTime = DateUtil.endOfMonth(startTime);
         //声明入参
         HashMap<String, Object> map = new HashMap<>(4);
-        map.put("startTime", startTime);
-        map.put("endTime", endTime);
+        map.put("startTime", startTime.toString());
+        map.put("endTime", endTime.toString());
         map.put("userId", userId);
         ArrayList<HashMap<String, Object>> monthCheckin = checkinService.searchMonthCheckin(map);
         //计算status参数额情况

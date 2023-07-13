@@ -193,7 +193,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
         if (now.compareTo(attendDanceTime) <= 0) {
             //正常考勤
             status = 1;
-            //如果当前时间晚于上班时间且早于上班打卡时间
+            //如果当前时间晚于上班时间且早于上班打卡结束时间时间
         } else if (now.compareTo(attendDanceTime) > 0 && now.compareTo(attendDanceEndTime) < 0) {
             //迟到
             status = 2;
@@ -334,7 +334,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
             String date = rangeDate.toString("yyyy-MM-dd");
             //校验当前日期的工作类型:是否为工作日,如果不在特殊的休息日和工作日的话就是正常的工作日
             String type = "工作日";
-            if (holidaysDate.contains(date)) {
+            if (holidaysDate.contains(date) || DateUtil.parse(date).isWeekend()) {
                 type = "节假日";
             } else if (workDaysByTime.contains(date)) {
                 type = "工作日";
@@ -353,7 +353,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
                         break;
                     }
                     //定义签到结束时间
-                    DateTime attendEndTime = DateUtil.parse(DateUtil.date() + systemConstant.attendanceEndTime);
+                    DateTime attendEndTime = DateUtil.parse(DateUtil.date().toDateStr() + " " + systemConstant.attendanceEndTime);
                     //如果用户没有在今天有签到记录,则检验是否为签到结束时间前还未签到的情况
                     if (date.equals(DateUtil.today()) && DateUtil.date().isBefore(attendEndTime) && !flag) {
                         status = "";
@@ -361,7 +361,7 @@ public class CheckinServiceImpl extends Throwable implements CheckinService {
                 }
             }
             //如果类型为假期则无需用户签到情况
-            HashMap<String, Object> hashMap = new HashMap();
+            HashMap<String, Object> hashMap = new HashMap(8);
             hashMap.put("date", date);
             hashMap.put("status", status);
             hashMap.put("type", type);

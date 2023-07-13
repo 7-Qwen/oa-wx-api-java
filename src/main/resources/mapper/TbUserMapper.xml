@@ -3,13 +3,15 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.wen.oawxapi.mapper.TbUserMapper">
-    <select id="getUserInfo" resultType="java.util.Map">
+    <select id="getUserInfo" parameterType="hashmap" resultType="hashmap">
         SELECT
         u.nickname as name,
-        d.dept_name as deptName
-        FROM tb_user u,tb_dept d
+        d.dept_name as deptName,
+        u.photo
+        FROM tb_user u
+        LEFT JOIN tb_dept d ON u.dept_id = d.id
         <where>
-            u.dept_id = d.id
+            u.id = #{userId}
         </where>
     </select>
 </mapper>

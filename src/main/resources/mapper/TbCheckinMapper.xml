@@ -11,8 +11,12 @@
         ck.address,
         CASE
         WHEN ck.`status` = 1 THEN '正常'
-        WHEN ck.`status` = 2 THEN '中风险'
-        WHEN ck.`status` = 3 THEN '高风险'
+        WHEN ck.`status` = 2 THEN '迟到'
+        END AS status,
+        CASE
+        WHEN ck.`risk` = 0 THEN '低风险'
+        WHEN ck.`risk` = 1 THEN '中风险'
+        WHEN ck.`risk` = 2 THEN '高风险'
         END AS risk,
         DATE_FORMAT(ck.create_time,'%H:%i') AS checkinTime,
         ck.date
@@ -30,7 +34,7 @@
         IF(status=1,'正常','迟到') AS status
         FROM tb_checkin
         <where>
-            user_id = #{userId} AND date BETWEEN #{startDate} AND #{endDate}
+            user_id = #{userId} AND date BETWEEN #{startTime} AND #{endTime}
         </where>
     </select>
 </mapper>

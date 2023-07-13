@@ -16,12 +16,12 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(value = "查询月份签到表单",description = "查询月份签到表单")
+@ApiModel(value = "查询月份签到表单", description = "查询月份签到表单")
 public class MonthCheckinForm {
     @NotNull
-    @Range(min = 2000,max = 3000)
-    private Integer month;
+    @Range(min = 2000, max = 3000)
+    private Integer year;
     @NotNull
     @Range(min = 1, max = 12)
-    private Integer year;
+    private Integer month;
 }

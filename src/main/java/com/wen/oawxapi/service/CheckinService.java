@@ -79,7 +79,7 @@ public interface CheckinService {
 
 
     /**
-     * 查询用户一周的签到情况
+     * 查询用户一月的签到情况
      */
     ArrayList<HashMap<String, Object>> searchMonthCheckin(HashMap<String, Object> param);
 
