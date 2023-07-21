@@ -1,11 +1,9 @@
 package com.wen.oawxapi.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.wen.oawxapi.common.config.ymlArgementConfig.oa.OaConfig;
 import com.wen.oawxapi.common.utils.JwtUtils;
 import com.wen.oawxapi.common.utils.R;
 import com.wen.oawxapi.entity.TbUser;
-import com.wen.oawxapi.service.CheckinService;
 import com.wen.oawxapi.service.UserService;
 import com.wen.oawxapi.vo.back.UserBackVo;
 import com.wen.oawxapi.vo.form.LoginForm;
@@ -43,7 +41,6 @@ public class UserController {
     private JwtUtils jwtUtils;
     @Resource
     private RedisTemplate<String, String> redisTemplate;
-
 
     @ApiOperation(value = "用户注册")
     @PostMapping(value = "/register")

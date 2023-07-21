@@ -1,6 +1,7 @@
 package com.wen.oawxapi.service.impl;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
@@ -9,10 +10,12 @@ import com.wen.oawxapi.common.environment.CommonConstantPaper;
 import com.wen.oawxapi.common.exception.CustomException;
 import com.wen.oawxapi.entity.TbUser;
 import com.wen.oawxapi.mapper.TbUserMapper;
+import com.wen.oawxapi.mongo.db.MessageEntity;
+import com.wen.oawxapi.service.UserService;
 import com.wen.oawxapi.service.base.BaseTbPermissionService;
 import com.wen.oawxapi.service.base.BaseTbRoleService;
 import com.wen.oawxapi.service.base.BaseTbUserService;
-import com.wen.oawxapi.service.UserService;
+import com.wen.oawxapi.task.RabbitMQTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -20,7 +23,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author: 7wen
@@ -46,6 +52,8 @@ public class UserServiceImpl implements UserService {
     private BaseTbPermissionService baseTbPermissionService;
     @Resource
     private TbUserMapper tbUserMapper;
+    @Resource
+    private RabbitMQTask rabbitMQTask;
 
 
     /**
@@ -77,6 +85,14 @@ public class UserServiceImpl implements UserService {
             if (!res) {
                 throw new CustomException("新建用户失败,请联系管理员");
             }
+            //发送消息
+            MessageEntity messageEntity = new MessageEntity();
+            messageEntity.setSendTime(new Date());
+            messageEntity.setMsg("欢迎您注册成为管理员，请及时更新你的员工个人信息。");
+            messageEntity.setSenderId(1);
+            messageEntity.setUuid(UUID.randomUUID().toString());
+            messageEntity.setSenderName("系统消息");
+            rabbitMQTask.send(tbUser.getId() + "", messageEntity);
         } else {
             //todo 待补充
         }
@@ -98,6 +114,8 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new CustomException("用户不存在,请前往注册");
         }
+        //接收消息
+        rabbitMQTask.receive(user.getId() + "");
         return user;
     }
 
