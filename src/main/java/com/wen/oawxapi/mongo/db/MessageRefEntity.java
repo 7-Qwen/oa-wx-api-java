@@ -11,14 +11,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @description:
  */
 @Data
-@Document(collection = "消息接收集合")
+@Document(collection = "message_ref")
 public class MessageRefEntity {
     @Id
     private String _id;
     @Indexed
     private String messageId;
     @Indexed
-    private Long receiverId;
+    private Integer receiverId;
     @Indexed
     private Boolean readFlag;
     @Indexed

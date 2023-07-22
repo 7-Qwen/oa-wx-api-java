@@ -54,7 +54,7 @@ public class MessageMapper {
                 Aggregation.lookup("message_ref", "id", "messageId", "ref"),
                 Aggregation.match(Criteria.where("ref.receiverId").is(userId)),
                 Aggregation.sort(Sort.by(Sort.Direction.DESC, "sendTime")),
-                Aggregation.skip(page),
+                Aggregation.skip(size * (page - 1)),
                 Aggregation.limit(size)
         );
         //处理消息

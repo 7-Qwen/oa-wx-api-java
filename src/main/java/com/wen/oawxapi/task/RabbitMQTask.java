@@ -85,7 +85,7 @@ public class RabbitMQTask {
                 //接收方持久化
                 MessageRefEntity messageRefEntity = new MessageRefEntity();
                 messageRefEntity.setMessageId(messageId);
-                messageRefEntity.setReceiverId(Long.parseLong(topic));
+                messageRefEntity.setReceiverId(Integer.parseInt(topic));
                 messageRefEntity.setReadFlag(false);
                 messageRefEntity.setLastFlag(true);
                 //存储接收方数据

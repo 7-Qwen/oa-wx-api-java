@@ -37,7 +37,7 @@ public class MessageRefMapper {
     public Long searchUnreadCount(long userId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("readFlag").is(false).and("receiverId").is(userId));
-        return mongoTemplate.count(query, MessageRefEntity.class);
+        return mongoTemplate.count(query, "message_ref");
     }
 
 
@@ -48,9 +48,9 @@ public class MessageRefMapper {
     public Long searchLastCount(long userId) {
         //先查询
         Query query = new Query().addCriteria(Criteria.where("lastFlag").is(true).and("receiverId").is(userId));
-        long count = mongoTemplate.count(query, MessageRefEntity.class);
+        long count = mongoTemplate.count(query, "message_ref");
         //后变更
-        UpdateResult result = mongoTemplate.updateMulti(query, new Update().set("lastFlag", false), MessageRefEntity.class);
+        UpdateResult result = mongoTemplate.updateMulti(query, new Update().set("lastFlag", false), "message_ref");
         return result.getModifiedCount();
     }
 
@@ -59,7 +59,7 @@ public class MessageRefMapper {
      * 用户读取消息后需要变更消息状态
      */
     public Long updateUnreadMessage(String id) {
-        UpdateResult result = mongoTemplate.updateFirst(new Query().addCriteria(Criteria.where("_id").is(id)), new Update().set("lastFlag", true), MessageRefEntity.class);
+        UpdateResult result = mongoTemplate.updateFirst(new Query().addCriteria(Criteria.where("_id").is(id)), new Update().set("lastFlag", true), "message_ref");
         return result.getModifiedCount();
     }
 
@@ -68,7 +68,7 @@ public class MessageRefMapper {
      * 根据消息id删除消息(单一
      */
     public Long deleteMessageRefById(String id) {
-        DeleteResult result = mongoTemplate.remove(new Query().addCriteria(Criteria.where("_id").is(id)), MessageRefEntity.class);
+        DeleteResult result = mongoTemplate.remove(new Query().addCriteria(Criteria.where("_id").is(id)), "message_ref");
         return result.getDeletedCount();
     }
 
@@ -77,7 +77,7 @@ public class MessageRefMapper {
      * 根据用户id删除消息 (全部已读)
      */
     public Long deleteMessageRefByUserId(Integer userId) {
-        DeleteResult result = mongoTemplate.remove(new Query().addCriteria(Criteria.where("receiverId").is(userId)), MessageRefEntity.class);
+        DeleteResult result = mongoTemplate.remove(new Query().addCriteria(Criteria.where("receiverId").is(userId)), "message_ref");
         return result.getDeletedCount();
     }
 }

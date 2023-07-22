@@ -14,7 +14,7 @@ import java.util.Date;
  * @description: message主体发送信息
  */
 @Data
-@Document(collation = "message")
+@Document(collection = "message")
 public class MessageEntity implements Serializable {
     @Id
     private String _id;
